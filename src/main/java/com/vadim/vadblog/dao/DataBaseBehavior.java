@@ -1,4 +1,4 @@
-package com.vadim.vadblog.Dao;
+package com.vadim.vadblog.dao;
 
 import com.mongodb.MongoClient;
 import com.mongodb.client.FindIterable;

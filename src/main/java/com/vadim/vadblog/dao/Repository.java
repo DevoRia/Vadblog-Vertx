@@ -1,7 +1,6 @@
-package com.vadim.vadblog.Dao;
+package com.vadim.vadblog.dao;
 
 
-import com.google.common.collect.Lists;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import org.bson.Document;
