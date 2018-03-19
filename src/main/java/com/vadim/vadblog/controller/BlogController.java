@@ -30,7 +30,8 @@ public class BlogController {
    void getAllPosts (RoutingContext routingContext) {
         routingContext.response()
                 .putHeader("content-type", "application/json; charset=utf-8")
-                .end(Json.encode(new Repository("blog", "blog").getList()));
+                .putHeader("Access-Control-Allow-Origin", "*")
+                .end(String.valueOf(new Repository("blog", "blog").getList()));
     }
 
 

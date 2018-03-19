@@ -6,7 +6,9 @@ import com.mongodb.client.MongoCollection;
 import org.bson.Document;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 public class Repository extends DataBaseBehavior{
 
@@ -28,6 +30,11 @@ public class Repository extends DataBaseBehavior{
     protected List getListOfDocuments(FindIterable<Document> documents) {
         List<String> list = new ArrayList<String>();
         for (Document document : documents) {
+            Date date = document.getDate("date");
+            long time = date.getTime();
+            for (Map.Entry<String, Object> entry : document.entrySet()) {
+                if (entry.getKey().equals("date"))  entry.setValue(time);
+            }
             String json = document.toJson();
             list.add(json);
         }
