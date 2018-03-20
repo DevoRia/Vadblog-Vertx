@@ -85,16 +85,10 @@
             <version>${vertx.version}</version>
         </dependency>
 
-
         <dependency>
-            <groupId>org.mongodb</groupId>
-            <artifactId>mongodb-driver</artifactId>
-            <version>RELEASE</version>
-        </dependency>
-        <dependency>
-            <groupId>org.mongodb</groupId>
-            <artifactId>bson</artifactId>
-            <version>RELEASE</version>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-mongo-client</artifactId>
+            <version>3.5.1</version>
         </dependency>
 
         <dependency>

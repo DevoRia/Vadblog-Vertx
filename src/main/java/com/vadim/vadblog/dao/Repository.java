@@ -1,61 +1,47 @@
 package com.vadim.vadblog.dao;
 
-
-import com.mongodb.client.FindIterable;
-import com.mongodb.client.MongoCollection;
-import org.bson.Document;
-
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import com.vadim.vadblog.dao.model.Post;
+import com.vadim.vadblog.service.JsonMaker;
+import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonObject;
+import io.vertx.ext.mongo.MongoClient;
 
 public class Repository extends DataBaseBehavior{
 
-    private List list;
-    private MongoCollection<Document> collection;
+    private JsonMaker jsonMaker;
 
-    public Repository(String nameDatabase, String nameCollection) {
-        super(nameDatabase);
-        this.list = getListOfDocuments(getElementsByCollection(nameCollection));
+    public Repository(Vertx vertx) {
+        super(vertx);
+        jsonMaker = new JsonMaker();
     }
 
     @Override
-    protected FindIterable<Document> getElementsByCollection(String nameOfCollection) {
-        collection = getDatabase().getCollection(nameOfCollection);
-        return collection.find();
-    }
-
-    @Override
-    protected List getListOfDocuments(FindIterable<Document> documents) {
-        List<String> list = new ArrayList<String>();
-        for (Document document : documents) {
-            Date date = document.getDate("date");
-            long time = date.getTime();
-            for (Map.Entry<String, Object> entry : document.entrySet()) {
-                if (entry.getKey().equals("date"))  entry.setValue(time);
+    public void getAllPosts() {
+        JsonObject query = new JsonObject();
+        MongoClient blog = getClient().find("blog", query, listAsyncResult -> {
+            if (listAsyncResult.succeeded()) {
+                for (JsonObject json : listAsyncResult.result()) {
+                    System.out.println(json.encodePrettily());
+                }
+            } else {
+                listAsyncResult.cause().printStackTrace();
             }
-            String json = document.toJson();
-            list.add(json);
-        }
-        return list;
+        });
     }
 
     @Override
-    protected void savePost() {
-    }
-
-    @Override
-    protected void removePost() {
+    public void save(Post post) {
 
     }
 
     @Override
-    protected void editPost() {
+    public void edit(Post post) {
 
     }
 
-    public List getList() {
-        return list;
+    @Override
+    public void remove(Post post) {
+
     }
+
 }

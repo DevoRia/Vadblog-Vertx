@@ -1,17 +1,17 @@
 package com.vadim.vadblog;
 
-import com.vadim.vadblog.controller.BlogController;
-import com.vadim.vadblog.dao.Repository;
+import com.vadim.vadblog.router.BlogRouter;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Vertx;
-import io.vertx.core.http.HttpServer;
-import sun.security.provider.certpath.Vertex;
+import io.vertx.core.json.JsonObject;
+import io.vertx.ext.mongo.MongoClient;
 
 public class MainVerticle extends AbstractVerticle {
 
     @Override
     public void start() throws Exception {
-        BlogController controller = new BlogController(vertx);
+        JsonObject config = Vertx.currentContext().config();
+        BlogRouter controller = new BlogRouter(vertx);
         vertx.createHttpServer()
                 .requestHandler(controller.getRouter()::accept)
                 .listen(8081);
