@@ -8,8 +8,6 @@ public class Post {
     private Long date;
     private Boolean visiable;
 
-    public Post() { }
-
     public Post(String id, String author, String text, Long date, Boolean visiable) {
         this.id = id;
         this.author = author;

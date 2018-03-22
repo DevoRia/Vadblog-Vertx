@@ -16,4 +16,8 @@ public class MainVerticle extends AbstractVerticle {
                 .requestHandler(controller.getRouter()::accept)
                 .listen(8081);
     }
+
+//    public static void main(String[] args) {
+//        Vertx.vertx().deployVerticle(new MainVerticle());
+//    }
 }

@@ -1,47 +1,51 @@
 package com.vadim.vadblog.dao;
 
-import com.vadim.vadblog.dao.model.Post;
-import com.vadim.vadblog.service.JsonMaker;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.mongo.MongoClient;
+
+import java.util.*;
 
 public class Repository extends DataBaseBehavior{
 
-    private JsonMaker jsonMaker;
+    private final String COLLECTION = "newBlog";
+    volatile private ArrayList<JsonObject> foundAllPost = null;
 
     public Repository(Vertx vertx) {
         super(vertx);
-        jsonMaker = new JsonMaker();
     }
 
     @Override
-    public void getAllPosts() {
+    public List<JsonObject> getAllPosts() {
         JsonObject query = new JsonObject();
-        MongoClient blog = getClient().find("blog", query, listAsyncResult -> {
+        getClient().find(COLLECTION, query, listAsyncResult -> {
             if (listAsyncResult.succeeded()) {
-                for (JsonObject json : listAsyncResult.result()) {
-                    System.out.println(json.encodePrettily());
-                }
+                foundAllPost = (ArrayList<JsonObject>) listAsyncResult.result();
             } else {
                 listAsyncResult.cause().printStackTrace();
+            }
+        });
+        return foundAllPost;
+    }
+
+    @Override
+    public void save(JsonObject object) {
+        getClient().save(COLLECTION, object, res -> { });
+    }
+
+    @Override
+    public void edit(JsonObject object, JsonObject newObject) {
+        getClient().findOneAndReplace(COLLECTION, object, newObject, res -> {
+            if (res.succeeded()){
+                System.out.println(res.result());
+            }else{
+                res.cause().printStackTrace();
             }
         });
     }
 
     @Override
-    public void save(Post post) {
-
-    }
-
-    @Override
-    public void edit(Post post) {
-
-    }
-
-    @Override
-    public void remove(Post post) {
-
+    public void remove(JsonObject object) {
+        getClient().removeDocument(COLLECTION, object, res -> {});
     }
 
 }

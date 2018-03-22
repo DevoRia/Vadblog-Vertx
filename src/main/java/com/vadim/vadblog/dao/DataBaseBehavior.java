@@ -1,9 +1,10 @@
 package com.vadim.vadblog.dao;
 
-import com.vadim.vadblog.dao.model.Post;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.mongo.MongoClient;
+
+import java.util.List;
 
 abstract class DataBaseBehavior {
 
@@ -24,13 +25,14 @@ abstract class DataBaseBehavior {
                 .put("db_name", DATABASE_NAME);
     }
 
-    public abstract void getAllPosts ();
-    public abstract void save (Post post);
-    public abstract void edit (Post post);
-    public abstract void remove (Post post);
+    public abstract List getAllPosts () throws InterruptedException;
+    public abstract void save(JsonObject object);
+    public abstract void edit(JsonObject object, JsonObject newObject);
+    public abstract void remove(JsonObject object);
 
     MongoClient getClient() {
         return client;
     }
+
 
 }
