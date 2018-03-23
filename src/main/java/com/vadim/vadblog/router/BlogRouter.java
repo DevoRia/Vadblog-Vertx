@@ -5,6 +5,8 @@ import com.vadim.vadblog.dao.model.Post;
 import com.vadim.vadblog.service.TransferDataService;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpMethod;
+import io.vertx.ext.auth.User;
+import io.vertx.ext.auth.oauth2.AccessToken;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
@@ -13,13 +15,12 @@ import java.util.Date;
 public class BlogRouter {
 
     private Router router;
-    private MainRouter mainRouter;
     private TransferDataService service;
 
     public BlogRouter(Vertx vertx) {
         service = new TransferDataService(vertx);
-        mainRouter = MainRouter.getInstance(vertx);
-        router = mainRouter.getRouter();
+        router = Router.router(vertx);
+        router.route().handler(BodyHandler.create().setBodyLimit(-1));
         runRouter();
     }
 
@@ -40,6 +41,12 @@ public class BlogRouter {
         router
                 .get("/server/remove/:id")
                 .handler(this::remove);
+        router
+                .get("/data/logout")
+                .handler(this::logout);
+        router
+                .get("/data/username")
+                .handler(this::username);
     }
 
     void getAllPosts (RoutingContext routingContext) {
@@ -73,6 +80,35 @@ public class BlogRouter {
                 .putHeader("Access-Control-Allow-Origin", "*")
                 .end("Success");
 
+    }
+
+    void username(RoutingContext routingContext) {
+        AccessToken token = (AccessToken) routingContext.user();
+        System.out.println(token);
+//        System.out.println(token.idToken());
+        routingContext
+                .response()
+                .putHeader("Access-Control-Allow-Origin", "*")
+                .end(/*token.accessToken().getString("username")*/  );
+    }
+
+
+    void logout(RoutingContext routingContext) {
+
+        AccessToken token = (AccessToken) routingContext.user();
+        token.userInfo(res -> {
+            System.out.println(res.result());
+        });
+
+        User some = token.isAuthorized("some", booleanAsyncResult -> {
+            token.logout(voidAsyncResult -> {
+                System.out.println(voidAsyncResult.result());
+            });
+        });
+        routingContext
+                .response()
+                .putHeader("Access-Control-Allow-Origin", "*")
+                .end("Logged out");
     }
 
     private Post getParams(RoutingContext routingContext){

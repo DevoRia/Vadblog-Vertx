@@ -38,5 +38,8 @@
     <orderEntry type="library" name="Maven: io.vertx:vertx-web:3.5.1" level="project" />
     <orderEntry type="library" name="Maven: io.vertx:vertx-auth-common:3.5.1" level="project" />
     <orderEntry type="library" name="Maven: io.vertx:vertx-bridge-common:3.5.1" level="project" />
+    <orderEntry type="library" name="Maven: io.vertx:vertx-auth-oauth2:3.5.1" level="project" />
+    <orderEntry type="library" name="Maven: io.vertx:vertx-jwt:3.5.1" level="project" />
+    <orderEntry type="library" name="Maven: io.vertx:vertx-auth-jwt:3.5.1" level="project" />
   </component>
 </module>
