@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/KeycloakSecurity/KeycloakSecurity.iml" filepath="$PROJECT_DIR$/KeycloakSecurity/KeycloakSecurity.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/VadBlog-Vertx.iml" filepath="$PROJECT_DIR$/.idea/VadBlog-Vertx.iml" />
     </modules>
   </component>

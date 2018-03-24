@@ -6,10 +6,13 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
+        <module name="KeycloakSecurity" />
         <module name="VadBlog-Vertx" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
+      <module name="KeycloakSecurity" target="1.8" />
+      <module name="TokenManager" target="1.8" />
       <module name="VadBlog-Vertx" target="1.8" />
     </bytecodeTargetLevel>
   </component>

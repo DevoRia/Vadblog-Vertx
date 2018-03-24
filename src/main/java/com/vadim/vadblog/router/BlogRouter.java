@@ -3,32 +3,46 @@ package com.vadim.vadblog.router;
 import com.vadim.vadblog.dao.model.ModelConstants;
 import com.vadim.vadblog.dao.model.Post;
 import com.vadim.vadblog.service.TransferDataService;
+import com.vadim.vadblog.service.security.KeycloakSecurity;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpMethod;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 import io.vertx.ext.auth.User;
 import io.vertx.ext.auth.oauth2.AccessToken;
+import io.vertx.ext.auth.oauth2.KeycloakHelper;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
+import io.vertx.ext.web.handler.UserSessionHandler;
+
 import java.util.Date;
 
 public class BlogRouter {
 
     private Router router;
     private TransferDataService service;
+    private KeycloakSecurity security;
+    private JsonObject token;
 
-    public BlogRouter(Vertx vertx) {
+    public BlogRouter(Vertx vertx, KeycloakSecurity security) {
         service = new TransferDataService(vertx);
+        this.security = security;
         router = Router.router(vertx);
         router.route().handler(BodyHandler.create().setBodyLimit(-1));
-        runRouter();
+        router.route().handler(UserSessionHandler.create(security.getoAuth2Auth()));
+        security.getAuth().setupCallback(router.get("/callback"));
+        router.route().handler(security.getAuth());
     }
 
     public Router getRouter() {
         return router;
     }
 
-    private void runRouter() {
+    public void runRouter() {
+        router.route("/login")
+                .handler(security.getAuth())
+               ;
         router
                 .get("/server/show")
                 .handler(this::getAllPosts);
@@ -42,11 +56,14 @@ public class BlogRouter {
                 .get("/server/remove/:id")
                 .handler(this::remove);
         router
-                .get("/data/logout")
-                .handler(this::logout);
-        router
                 .get("/data/username")
-                .handler(this::username);
+                .handler(this::getUsername);
+        router
+                .get("/data/isAdmin")
+                .handler(this::isAdminChecked);
+        router
+                .get("/data/logout")
+                .handler(this::loggingOut);
     }
 
     void getAllPosts (RoutingContext routingContext) {
@@ -82,34 +99,28 @@ public class BlogRouter {
 
     }
 
-    void username(RoutingContext routingContext) {
-        AccessToken token = (AccessToken) routingContext.user();
-        System.out.println(token);
-//        System.out.println(token.idToken());
-        routingContext
-                .response()
+    void getUsername (RoutingContext routingContext) {
+        token = KeycloakHelper.accessToken(routingContext.user().principal());
+        String username = token.getString("preferred_username");
+        routingContext.response()
                 .putHeader("Access-Control-Allow-Origin", "*")
-                .end(/*token.accessToken().getString("username")*/  );
+                .end(username);
     }
 
-
-    void logout(RoutingContext routingContext) {
-
-        AccessToken token = (AccessToken) routingContext.user();
-        token.userInfo(res -> {
-            System.out.println(res.result());
-        });
-
-        User some = token.isAuthorized("some", booleanAsyncResult -> {
-            token.logout(voidAsyncResult -> {
-                System.out.println(voidAsyncResult.result());
-            });
-        });
-        routingContext
-                .response()
+    void isAdminChecked (RoutingContext routingContext){
+        token = KeycloakHelper.accessToken(routingContext.user().principal());
+        JsonObject resource_access = token.getJsonObject("realm_access");
+        JsonArray roles = resource_access.getJsonArray("roles");
+        routingContext.response()
                 .putHeader("Access-Control-Allow-Origin", "*")
-                .end("Logged out");
+                .end(String.valueOf(roles.contains("admin")));
     }
+
+    void loggingOut (RoutingContext routingContext) {
+        AccessToken user = (AccessToken) routingContext.user();
+        user.logout(res -> System.out.println(res.result()));
+    }
+
 
     private Post getParams(RoutingContext routingContext){
         Long date;
