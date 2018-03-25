@@ -25,7 +25,7 @@ public class KeycloakSecurity {
                         "  \"ssl-required\": \"external\",\n" +
                         "  \"resource\": \"vertx\",\n" +
                         "  \"credentials\": {\n" +
-                        "    \"secret\": \"8fd8dbcb-7b76-468d-a9dd-ff28f70fbc38\"\n" +
+                        "    \"secret\": \"37499fd8-4755-4658-8362-64cf8fda0de2\"\n" +
                         "  },\n" +
                         "  \"confidential-port\": 0,\n" +
                         "  \"policy-enforcer\": {}\n" +

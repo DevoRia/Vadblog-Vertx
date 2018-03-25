@@ -8,7 +8,6 @@ import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.auth.User;
 import io.vertx.ext.auth.oauth2.AccessToken;
 import io.vertx.ext.auth.oauth2.KeycloakHelper;
 import io.vertx.ext.web.Router;
@@ -24,6 +23,8 @@ public class BlogRouter {
     private TransferDataService service;
     private KeycloakSecurity security;
     private JsonObject token;
+    private AccessToken user;
+
 
     public BlogRouter(Vertx vertx, KeycloakSecurity security) {
         service = new TransferDataService(vertx);
@@ -32,7 +33,6 @@ public class BlogRouter {
         router.route().handler(BodyHandler.create().setBodyLimit(-1));
         router.route().handler(UserSessionHandler.create(security.getoAuth2Auth()));
         security.getAuth().setupCallback(router.get("/callback"));
-        router.route().handler(security.getAuth());
     }
 
     public Router getRouter() {
@@ -40,9 +40,9 @@ public class BlogRouter {
     }
 
     public void runRouter() {
-        router.route("/login")
+        router.get("/login")
                 .handler(security.getAuth())
-               ;
+                .handler(this::loggingIn);
         router
                 .get("/server/show")
                 .handler(this::getAllPosts);
@@ -66,7 +66,15 @@ public class BlogRouter {
                 .handler(this::loggingOut);
     }
 
-    void getAllPosts (RoutingContext routingContext) {
+    private void loggingIn(RoutingContext routingContext) {
+        token = KeycloakHelper.accessToken(routingContext.user().principal());
+        user = (AccessToken) routingContext.user();
+        routingContext.response()
+                .putHeader("location", "http://localhost:8081/server/show")
+                .end();
+    }
+
+    private void getAllPosts (RoutingContext routingContext) {
         routingContext.response()
                 .putHeader("content-type", "application/json; charset=utf-8")
                 .putHeader("Access-Control-Allow-Origin", "*")
@@ -74,7 +82,7 @@ public class BlogRouter {
 
     }
 
-    void savePost (RoutingContext routingContext){
+    private void savePost (RoutingContext routingContext){
         Post post = getParams(routingContext);
         service.save(post);
         routingContext.response()
@@ -82,33 +90,31 @@ public class BlogRouter {
                 .end("Success");
     }
 
-    void editPost (RoutingContext routingContext){
+    private void editPost (RoutingContext routingContext){
         Post post = getParams(routingContext);
+        post.setAuthor(getAttribute(ModelConstants.KEY_AUTHOR, routingContext));
         service.edit(post);
         routingContext.response()
                 .putHeader("Access-Control-Allow-Origin", "*")
                 .end("Success");
     }
 
-    void remove (RoutingContext routingContext){
+    private void remove (RoutingContext routingContext){
         String id = routingContext.request().getParam("id");
         service.remove(id);
         routingContext.response()
                 .putHeader("Access-Control-Allow-Origin", "*")
                 .end("Success");
-
     }
 
-    void getUsername (RoutingContext routingContext) {
-        token = KeycloakHelper.accessToken(routingContext.user().principal());
+    private void getUsername (RoutingContext routingContext) {
         String username = token.getString("preferred_username");
         routingContext.response()
                 .putHeader("Access-Control-Allow-Origin", "*")
                 .end(username);
     }
 
-    void isAdminChecked (RoutingContext routingContext){
-        token = KeycloakHelper.accessToken(routingContext.user().principal());
+    private void isAdminChecked (RoutingContext routingContext){
         JsonObject resource_access = token.getJsonObject("realm_access");
         JsonArray roles = resource_access.getJsonArray("roles");
         routingContext.response()
@@ -116,9 +122,13 @@ public class BlogRouter {
                 .end(String.valueOf(roles.contains("admin")));
     }
 
-    void loggingOut (RoutingContext routingContext) {
-        AccessToken user = (AccessToken) routingContext.user();
+    private void loggingOut (RoutingContext routingContext) {
         user.logout(res -> System.out.println(res.result()));
+        token = null;
+        user = null;
+        routingContext.response()
+                .putHeader("Access-Control-Allow-Origin", "*")
+                .end("Logged out");
     }
 
 
@@ -133,7 +143,7 @@ public class BlogRouter {
 
         return new Post(
                 getAttribute(ModelConstants.KEY_TITLE, routingContext),
-                getAttribute(ModelConstants.KEY_AUTHOR, routingContext),
+                token.getString("preferred_username"),
                 getAttribute(ModelConstants.KEY_TEXT, routingContext),
                 date,
                 false);
