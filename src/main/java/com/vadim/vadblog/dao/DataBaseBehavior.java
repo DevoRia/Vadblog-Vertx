@@ -3,6 +3,7 @@ package com.vadim.vadblog.dao;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.mongo.MongoClient;
+import io.vertx.ext.web.RoutingContext;
 
 import java.util.List;
 
@@ -25,7 +26,7 @@ abstract class DataBaseBehavior {
                 .put("db_name", DATABASE_NAME);
     }
 
-    public abstract List getAllPosts () throws InterruptedException;
+    public abstract void getAllPosts (RoutingContext routingContext) throws InterruptedException;
     public abstract void save(JsonObject object);
     public abstract void edit(JsonObject object, JsonObject newObject);
     public abstract void remove(JsonObject object);

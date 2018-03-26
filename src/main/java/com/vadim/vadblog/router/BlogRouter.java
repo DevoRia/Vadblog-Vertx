@@ -70,19 +70,17 @@ public class BlogRouter {
         token = KeycloakHelper.accessToken(routingContext.user().principal());
         user = (AccessToken) routingContext.user();
         routingContext.response()
-                .putHeader("location", "http://localhost:8081/server/show")
+                //TODO Create location redirect
+                .putHeader("Location", "http://localhost:8081/server/show")
                 .end();
     }
 
     private void getAllPosts (RoutingContext routingContext) {
-        routingContext.response()
-                .putHeader("content-type", "application/json; charset=utf-8")
-                .putHeader("Access-Control-Allow-Origin", "*")
-                .end(String.valueOf(service.getAllPosts()));
-
+        service.getAllPosts(routingContext);
     }
 
     private void savePost (RoutingContext routingContext){
+        if (token == null) return;
         Post post = getParams(routingContext);
         service.save(post);
         routingContext.response()
@@ -91,15 +89,25 @@ public class BlogRouter {
     }
 
     private void editPost (RoutingContext routingContext){
-        Post post = getParams(routingContext);
-        post.setAuthor(getAttribute(ModelConstants.KEY_AUTHOR, routingContext));
-        service.edit(post);
-        routingContext.response()
-                .putHeader("Access-Control-Allow-Origin", "*")
-                .end("Success");
+        String nameFromPost = getAttribute(ModelConstants.KEY_AUTHOR, routingContext);
+        String nameFromToken = token.getString("preferred_username");
+        //TODO: REFACTOR IT
+        JsonObject resource_access = token.getJsonObject("realm_access");
+        JsonArray roles = resource_access.getJsonArray("roles");
+
+        if (nameFromToken.equals(nameFromPost) || roles.contains("admin")) {
+
+            Post post = getParams(routingContext);
+            post.setAuthor(nameFromPost);
+            service.edit(post);
+            routingContext.response()
+                    .putHeader("Access-Control-Allow-Origin", "*")
+                    .end("Success");
+        }
     }
 
     private void remove (RoutingContext routingContext){
+        //TODO Add removable by token
         String id = routingContext.request().getParam("id");
         service.remove(id);
         routingContext.response()

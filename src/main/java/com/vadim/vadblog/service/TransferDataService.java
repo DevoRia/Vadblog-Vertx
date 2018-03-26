@@ -4,6 +4,7 @@ import com.vadim.vadblog.dao.Repository;
 import com.vadim.vadblog.dao.model.Post;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.web.RoutingContext;
 
 import java.util.List;
 import java.util.Date;
@@ -20,8 +21,8 @@ public class TransferDataService {
         jsonMaker = new JsonMaker();
     }
 
-    public List<JsonObject> getAllPosts() {
-        return repository.getAllPosts();
+    public void getAllPosts(RoutingContext routingContext) {
+        repository.getAllPosts(routingContext);
     }
 
     public void save (Post post) {

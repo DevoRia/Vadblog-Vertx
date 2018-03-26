@@ -2,29 +2,34 @@ package com.vadim.vadblog.dao;
 
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.web.RoutingContext;
 
 import java.util.*;
 
 public class Repository extends DataBaseBehavior{
 
     private final String COLLECTION = "newBlog";
-    volatile private ArrayList<JsonObject> foundAllPost = null;
+    private ArrayList<JsonObject> foundAllPost = null;
 
     public Repository(Vertx vertx) {
         super(vertx);
     }
 
+
+
     @Override
-    public List<JsonObject> getAllPosts() {
+    public void getAllPosts(RoutingContext routingContext) {
         JsonObject query = new JsonObject();
         getClient().find(COLLECTION, query, listAsyncResult -> {
             if (listAsyncResult.succeeded()) {
-                foundAllPost = (ArrayList<JsonObject>) listAsyncResult.result();
+                routingContext.response()
+                        .putHeader("content-type", "application/json; charset=utf-8")
+                        .putHeader("Access-Control-Allow-Origin", "*")
+                        .end(String.valueOf(listAsyncResult.result()));
             } else {
                 listAsyncResult.cause().printStackTrace();
             }
         });
-        return foundAllPost;
     }
 
     @Override
@@ -48,4 +53,7 @@ public class Repository extends DataBaseBehavior{
         getClient().removeDocument(COLLECTION, object, res -> {});
     }
 
+    public ArrayList<JsonObject> getFoundAllPost() {
+        return foundAllPost;
+    }
 }
