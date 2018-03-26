@@ -7,6 +7,8 @@ import io.vertx.ext.web.RoutingContext;
 
 abstract class DataBaseBehavior {
 
+    public static final String COLLECTION = "newBlog";
+    ;
     private final String DATABASE_URI = "mongodb://localhost:27017";
     private final String DATABASE_NAME = "blog";
 

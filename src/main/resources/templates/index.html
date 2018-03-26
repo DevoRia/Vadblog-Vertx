@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ua">
+  <head>
+    <meta charset="utf-8">
+    <title>VadBlog</title>
+    <link rel="stylesheet" href="src/css/style.css">
+  </head>
+  <body>
+    <div id="app">
+      <header>
+        <h1><a href="#">VadBlog</a></h1>
+        <h3><a v-if="author" href="#">{{author}}</a>
+          <a v-else="author" @click="login" >Ввійти</a>
+          |
+        <a v-if="author" @click="logout">Вийти</a></h3>
+      </header>
+      <div id="content">
+        <input v-if="author" @click="showAddDialog = true" id="add" class="buttons" type="button" name="creating" value="Додати новий пост">
+        <div class="blog" v-for="note in notes">
+          <h1 ><a @click="note.visiable = !note.visiable">{{note.title}}{{note._id}}</a></h1>
+          <h2>{{note.author}} | {{note.date}}</h2>
+          <div id="functions">
+            <h2>
+              <template v-if="author == note.author || isAdmin" >
+                <editable @id="transferElement" :author="note.author" :title="note._id" :text="note.text"></editable>
+                |
+                <removable @id="transferElement" :title="note._id" :author="note.author" ></removable>
+              </template>
+            </h2>
+          </div>
+          <hr>
+          <p v-if="note.visiable" @click="note.visiable = !note.visiable">{{note.text}}</p>
+          <button v-else="note.visiable" @click="note.visiable = !note.visiable" >Детальніше</button>
+        </div>
+        <modal @delete="removeById"  v-if="showRemoveDialog" @close="showRemoveDialog = false"></modal>
+        <modal-edit @edit-method="editPost" v-if="showEditDialog" @close="showEditDialog = false"></modal-edit>
+        <modal-add @add="addPost" v-if="showAddDialog" @close="showAddDialog = false"></modal-add>
+      </div>
+<!-- MODAL EDIT -->
+    <script type="text/x-template" id="modal-template-edit">
+      <transition name="modal-edit">
+        <div class="modal-mask">
+          <div class="modal-wrapper">
+            <div class="modal-container">
+
+              <div class="modal-header">
+                <slot>
+                  <h3>Редагувати пост?</h3>
+                </slot>
+              </div>
+
+              <div class="modal-body">
+                <slot name="body">
+                  Назва:<br>
+                  <input type="text" name="title"  v-model="title" disabled><br>
+                  Ваше ім'я: <br>
+                  <input type="text" name="author"  v-model="author" disabled><br>
+                  Запис:<br>
+                  <textarea cols="30" rows="3" name="text"  v-model="text"></textarea>
+
+                </slot>
+              </div>
+
+              <div class="modal-footer">
+                <slot name="footer">
+                  <button class="modal-default-button" @click="editOnClick" >
+                    Редагувати
+                  </button>
+                  <button class="modal-default-button" @click="$emit('close')">
+                    Відмінити
+                  </button>
+                  <br>
+                </slot>
+              </div>
+            </div>
+          </div>
+        </div>
+      </transition>
+    </script>
+    </div>
+    <!-- MODAL REMOVE -->
+    <script type="text/x-template" id="modal-template">
+      <transition name="modal">
+        <div class="modal-mask">
+          <div class="modal-wrapper">
+            <div class="modal-container">
+
+              <div class="modal-header">
+                <slot>
+                  <h3>Видалити пост?</h3>
+                </slot>
+              </div>
+
+              <div class="modal-body">
+                <slot name="body">
+                  Ви впевнені?
+                </slot>
+              </div>
+
+              <div class="modal-footer">
+                <slot name="footer">
+                  <button class="modal-default-button" @click="remove" >
+                    Так
+                  </button>
+                  <button class="modal-default-button" @click="$emit('close')">
+                    Ні
+                  </button>
+                  <br>
+                </slot>
+              </div>
+            </div>
+          </div>
+        </div>
+      </transition>
+    </script>
+<!-- MODAL ADD -->
+    <script type="text/x-template" id="modal-template-add">
+      <transition name="modal-add">
+        <div class="modal-mask">
+          <div class="modal-wrapper">
+            <div class="modal-container">
+
+              <div class="modal-header">
+                <slot>
+                  <h3>Додавання нового поста</h3>
+                </slot>
+              </div>
+
+              <div class="modal-body">
+                <slot name="body">
+                  Назва:<br>
+                  <input type="text" name="title" v-model="title"><br>
+                  Ваше ім'я:<br>
+                  <input type="text" name="author" v-model="author" disabled><br>
+                  Запис:<br>
+                  <textarea cols="30" rows="3" name="text" v-model="text"></textarea>
+
+                </slot>
+              </div>
+
+              <div class="modal-footer">
+                <slot name="footer">
+
+                  <button class="modal-default-button" @click="addOnClick" >
+                    Додати
+                  </button>
+                  <button class="modal-default-button" @click="$emit('close')">
+                    Відмінити
+                  </button>
+                  <br>
+                </slot>
+              </div>
+            </div>
+          </div>
+        </div>
+      </transition>
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue-resource@1.3.6"></script>
+    <script src="src/main.js"></script> <!-- Main script -->
+  </body>
+</html>

@@ -7,7 +7,6 @@ import io.vertx.ext.web.RoutingContext;
 
 public class Repository extends DataBaseBehavior{
 
-    private final String COLLECTION = "newBlog";
 
     public Repository(Vertx vertx) {
         super(vertx);

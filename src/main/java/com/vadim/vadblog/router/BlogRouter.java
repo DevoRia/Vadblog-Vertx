@@ -19,7 +19,6 @@ public class BlogRouter {
     public final static String ACCESS_CONTROL_ALLOW_ORIGIN =  "Access-Control-Allow-Origin";
     public final static String HTTP_HEADER_SELECT_ALL = "*";
     private final String SUCCESS_RESPONSE = "Success";
-    private final String REFFERE = "http://localhost:63342/VadBlog-Vertx/templates/index.html";
 
     private Router router;
     private AuthManage security;
@@ -76,9 +75,9 @@ public class BlogRouter {
     private void loggingIn(RoutingContext routingContext) {
         token = KeycloakHelper.accessToken(routingContext.user().principal());
         user = (AccessToken) routingContext.user();
-        String REDIRECT_HEADER = "Location";
         routingContext.response()
-                .putHeader(REDIRECT_HEADER, REFFERE)
+                .setStatusCode(302)
+                .putHeader("Location", "http://localhost:63342/VadBlog-Vertx/templates/index.html")
                 .end();
     }
 
