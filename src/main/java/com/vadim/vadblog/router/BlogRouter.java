@@ -24,6 +24,7 @@ public class BlogRouter {
     private KeycloakSecurity security;
     private JsonObject token;
     private AccessToken user;
+    private String referrerUrl;
 
 
     public BlogRouter(Vertx vertx, KeycloakSecurity security) {
@@ -40,7 +41,8 @@ public class BlogRouter {
     }
 
     public void runRouter() {
-        router.get("/login")
+        router
+                .get("/login")
                 .handler(security.getAuth())
                 .handler(this::loggingIn);
         router
@@ -70,8 +72,8 @@ public class BlogRouter {
         token = KeycloakHelper.accessToken(routingContext.user().principal());
         user = (AccessToken) routingContext.user();
         routingContext.response()
-                //TODO Create location redirect
-                .putHeader("Location", "http://localhost:8081/server/show")
+                .setStatusCode(302)
+                .putHeader("Location", "http://localhost:63342/VadBlog-Vertx/templates/index.html")
                 .end();
     }
 
@@ -107,12 +109,13 @@ public class BlogRouter {
     }
 
     private void remove (RoutingContext routingContext){
-        //TODO Add removable by token
-        String id = routingContext.request().getParam("id");
-        service.remove(id);
-        routingContext.response()
-                .putHeader("Access-Control-Allow-Origin", "*")
-                .end("Success");
+        if (routingContext.request().getFormAttribute("author").equals(token.getString("preferred_username"))) {
+            String id = routingContext.request().getParam("id");
+            service.remove(id);
+            routingContext.response()
+                    .putHeader("Access-Control-Allow-Origin", "*")
+                    .end("Success");
+        }
     }
 
     private void getUsername (RoutingContext routingContext) {
