@@ -1,12 +1,11 @@
 package com.vadim.vadblog.router;
 
-import com.vadim.vadblog.dao.model.ModelConstants;
 import com.vadim.vadblog.dao.model.Post;
+import com.vadim.vadblog.service.PostService;
 import com.vadim.vadblog.service.TransferDataService;
-import com.vadim.vadblog.service.security.KeycloakSecurity;
+import com.vadim.vadblog.service.UserService;
+import com.vadim.vadblog.service.security.AuthManage;
 import io.vertx.core.Vertx;
-import io.vertx.core.http.HttpMethod;
-import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.auth.oauth2.AccessToken;
 import io.vertx.ext.auth.oauth2.KeycloakHelper;
@@ -15,24 +14,29 @@ import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
 import io.vertx.ext.web.handler.UserSessionHandler;
 
-import java.util.Date;
-
 public class BlogRouter {
 
+    public final static String ACCESS_CONTROL_ALLOW_ORIGIN =  "Access-Control-Allow-Origin";
+    public final static String HTTP_HEADER_SELECT_ALL = "*";
+    private final String SUCCESS_RESPONSE = "Success";
+    private final String REFFERE = "http://localhost:63342/VadBlog-Vertx/templates/index.html";
+
     private Router router;
-    private TransferDataService service;
-    private KeycloakSecurity security;
+    private AuthManage security;
     private JsonObject token;
     private AccessToken user;
-    private String referrerUrl;
+    private PostService postService;
+    private TransferDataService dataService;
+    private UserService userService;
 
-
-    public BlogRouter(Vertx vertx, KeycloakSecurity security) {
-        service = new TransferDataService(vertx);
+    public BlogRouter(Vertx vertx, AuthManage security) {
+        this.dataService = new TransferDataService(vertx);
         this.security = security;
+        this.postService = new PostService();
+        this.userService = new UserService();
         router = Router.router(vertx);
         router.route().handler(BodyHandler.create().setBodyLimit(-1));
-        router.route().handler(UserSessionHandler.create(security.getoAuth2Auth()));
+        router.route().handler(UserSessionHandler.create(security.getKeycloakAuth()));
         security.getAuth().setupCallback(router.get("/callback"));
     }
 
@@ -46,18 +50,6 @@ public class BlogRouter {
                 .handler(security.getAuth())
                 .handler(this::loggingIn);
         router
-                .get("/server/show")
-                .handler(this::getAllPosts);
-        router
-                .route(HttpMethod.POST, "/server/add")
-                .handler(this::savePost);
-        router
-                .route(HttpMethod.POST, "/server/edit")
-                .handler(this::editPost);
-        router
-                .get("/server/remove/:id")
-                .handler(this::remove);
-        router
                 .get("/data/username")
                 .handler(this::getUsername);
         router
@@ -66,103 +58,81 @@ public class BlogRouter {
         router
                 .get("/data/logout")
                 .handler(this::loggingOut);
+        router
+                .get("/server/show")
+                .handler(this::getAllPosts);
+        router
+                .post("/server/add")
+                .handler(this::savePost);
+        router
+                .post("/server/edit")
+                .handler(this::editPost);
+        router
+                .get("/server/remove/:id")
+                .handler(this::remove);
+
     }
 
     private void loggingIn(RoutingContext routingContext) {
         token = KeycloakHelper.accessToken(routingContext.user().principal());
         user = (AccessToken) routingContext.user();
+        String REDIRECT_HEADER = "Location";
         routingContext.response()
-                .setStatusCode(302)
-                .putHeader("Location", "http://localhost:63342/VadBlog-Vertx/templates/index.html")
+                .putHeader(REDIRECT_HEADER, REFFERE)
+                .end();
+    }
+
+    private void getUsername (RoutingContext routingContext) {
+        routingContext.response()
+                .putHeader(ACCESS_CONTROL_ALLOW_ORIGIN, HTTP_HEADER_SELECT_ALL)
+                .end(userService.getUsername(token));
+    }
+
+    private void isAdminChecked (RoutingContext routingContext){
+        routingContext.response()
+                .putHeader(ACCESS_CONTROL_ALLOW_ORIGIN, HTTP_HEADER_SELECT_ALL)
+                .end(String.valueOf(userService.isAdmin(token)));
+    }
+
+    private void loggingOut (RoutingContext routingContext) {
+        user.logout(res -> System.out.println("Logged out"));
+        token = null;
+        user = null;
+        routingContext.response()
+                .putHeader(ACCESS_CONTROL_ALLOW_ORIGIN, HTTP_HEADER_SELECT_ALL)
                 .end();
     }
 
     private void getAllPosts (RoutingContext routingContext) {
-        service.getAllPosts(routingContext);
+        dataService.getAllPosts(routingContext);
     }
 
     private void savePost (RoutingContext routingContext){
         if (token == null) return;
-        Post post = getParams(routingContext);
-        service.save(post);
+        Post post = postService.makePost(routingContext, userService.getUsername(token));
+        dataService.save(post);
         routingContext.response()
-                .putHeader("Access-Control-Allow-Origin", "*")
-                .end("Success");
+                .putHeader(ACCESS_CONTROL_ALLOW_ORIGIN, HTTP_HEADER_SELECT_ALL)
+                .end(SUCCESS_RESPONSE);
     }
 
     private void editPost (RoutingContext routingContext){
-        String nameFromPost = getAttribute(ModelConstants.KEY_AUTHOR, routingContext);
-        String nameFromToken = token.getString("preferred_username");
-        //TODO: REFACTOR IT
-        JsonObject resource_access = token.getJsonObject("realm_access");
-        JsonArray roles = resource_access.getJsonArray("roles");
-
-        if (nameFromToken.equals(nameFromPost) || roles.contains("admin")) {
-
-            Post post = getParams(routingContext);
-            post.setAuthor(nameFromPost);
-            service.edit(post);
+        if (userService.accessToChange(token, routingContext)) {
+            Post post = postService.makePost(routingContext, userService.nameFromPost(routingContext));
+            dataService.edit(post);
             routingContext.response()
-                    .putHeader("Access-Control-Allow-Origin", "*")
-                    .end("Success");
+                    .putHeader(ACCESS_CONTROL_ALLOW_ORIGIN, HTTP_HEADER_SELECT_ALL)
+                    .end(SUCCESS_RESPONSE);
         }
     }
 
     private void remove (RoutingContext routingContext){
-        if (routingContext.request().getFormAttribute("author").equals(token.getString("preferred_username"))) {
+        if (userService.accessToChange(token, routingContext)){
             String id = routingContext.request().getParam("id");
-            service.remove(id);
+            dataService.remove(id);
             routingContext.response()
-                    .putHeader("Access-Control-Allow-Origin", "*")
-                    .end("Success");
+                    .putHeader(ACCESS_CONTROL_ALLOW_ORIGIN, HTTP_HEADER_SELECT_ALL)
+                    .end(SUCCESS_RESPONSE);
         }
     }
-
-    private void getUsername (RoutingContext routingContext) {
-        String username = token.getString("preferred_username");
-        routingContext.response()
-                .putHeader("Access-Control-Allow-Origin", "*")
-                .end(username);
-    }
-
-    private void isAdminChecked (RoutingContext routingContext){
-        JsonObject resource_access = token.getJsonObject("realm_access");
-        JsonArray roles = resource_access.getJsonArray("roles");
-        routingContext.response()
-                .putHeader("Access-Control-Allow-Origin", "*")
-                .end(String.valueOf(roles.contains("admin")));
-    }
-
-    private void loggingOut (RoutingContext routingContext) {
-        user.logout(res -> System.out.println(res.result()));
-        token = null;
-        user = null;
-        routingContext.response()
-                .putHeader("Access-Control-Allow-Origin", "*")
-                .end("Logged out");
-    }
-
-
-    private Post getParams(RoutingContext routingContext){
-        Long date;
-
-        try {
-            date = Long.parseLong(getAttribute(ModelConstants.KEY_DATE, routingContext));
-        } catch (NumberFormatException e) {
-            date = new Date().getTime();
-        }
-
-        return new Post(
-                getAttribute(ModelConstants.KEY_TITLE, routingContext),
-                token.getString("preferred_username"),
-                getAttribute(ModelConstants.KEY_TEXT, routingContext),
-                date,
-                false);
-    }
-
-    private String getAttribute(String key, RoutingContext context) {
-        return context.request().getFormAttribute(key);
-    }
-
-
 }

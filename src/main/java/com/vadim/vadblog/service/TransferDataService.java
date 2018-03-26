@@ -9,38 +9,31 @@ import io.vertx.ext.web.RoutingContext;
 import java.util.List;
 import java.util.Date;
 
-public class TransferDataService {
+public class TransferDataService implements Service{
 
-    private Vertx vertx;
     private Repository repository;
-    private JsonMaker jsonMaker;
 
     public TransferDataService(Vertx vertx) {
-        this.vertx = vertx;
-        this.repository = new Repository(this.vertx);
-        jsonMaker = new JsonMaker();
+        this.repository = new Repository(vertx);
     }
 
-    public void getAllPosts(RoutingContext routingContext) {
+    public void getAllPosts (RoutingContext routingContext) {
         repository.getAllPosts(routingContext);
     }
 
     public void save (Post post) {
-        JsonObject object = jsonMaker.newJsonOfPost(post);
-        System.out.println(object);
+        JsonObject object = JsonMaker.newJsonOfPost(post);
         repository.save(object);
     }
 
     public void remove (String title) {
-        JsonObject object = jsonMaker.titleJson(title);
+        JsonObject object = JsonMaker.titleJson(title);
         repository.remove(object);
     }
 
     public void edit(Post newPost) {
-        JsonObject object = jsonMaker.newJsonOfPost(newPost);
-        JsonObject titleObject = jsonMaker.titleJson(newPost.getId());
-        System.out.println(object + " NEW ");
-        System.out.println(titleObject + " TITLE ");
+        JsonObject object = JsonMaker.newJsonOfPost(newPost);
+        JsonObject titleObject = JsonMaker.titleJson(newPost.getId());
         repository.edit(titleObject, object);
     }
 }

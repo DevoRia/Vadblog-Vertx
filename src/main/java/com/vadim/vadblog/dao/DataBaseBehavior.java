@@ -5,8 +5,6 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.mongo.MongoClient;
 import io.vertx.ext.web.RoutingContext;
 
-import java.util.List;
-
 abstract class DataBaseBehavior {
 
     private final String DATABASE_URI = "mongodb://localhost:27017";
