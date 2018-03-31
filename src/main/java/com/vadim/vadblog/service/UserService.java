@@ -21,7 +21,7 @@ public class UserService implements Service {
 
     Boolean isAuthor (RoutingContext routingContext, JsonObject token){
         String nameFromToken = getUsername(token);
-        return nameFromPost(routingContext).equals(nameFromToken);
+        return nameFromToken.equals(nameFromPost(routingContext));
     }
 
     JsonArray getRolesByToken (JsonObject token){
@@ -30,7 +30,7 @@ public class UserService implements Service {
     }
 
     public Boolean accessToChange (JsonObject token, RoutingContext routingContext) {
-        return (isAuthor(routingContext, token) || isAdmin(token));
+        return (isAdmin(token) || isAuthor(routingContext, token));
     }
 
     public String nameFromPost (RoutingContext routingContext){

@@ -67,7 +67,7 @@ public class BlogRouter {
                 .post("/server/edit")
                 .handler(this::editPost);
         router
-                .get("/server/remove/:id")
+                .post("/server/remove/:id")
                 .handler(this::remove);
 
     }

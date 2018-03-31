@@ -2,12 +2,12 @@ Vue.component("editable",{
   template: '<a @click="getId" >Редагувати</a>',
   props: {
     title: String,
-
-    text: String
+    text: String,
+    author: String
   },
   methods:{
     getId: function () {
-      this.$emit('id', 'edit', this.title, this.text) //передає елемент в transferElement
+      this.$emit('id', 'edit', this.title, this.text, this.author) //передає елемент в transferElement
     }
   }
 });
@@ -111,11 +111,12 @@ var App = new Vue({
   	},
 
     transferElement: function (key, title, text, author) {
-      this.title = title; //зберігає id в цьому об'єкті
-      switch (key) {
+        this.title = title; //зберігає id в цьому об'єкті
+        this.authorForDelete = author;
+        console.log(author + " jjj");
+        switch (key) {
         case 'delete':
           this.showRemoveDialog = true; //показує вікно
-          this.authorForDelete = author;
           break;
         case 'edit':
           this.showEditDialog = true;
@@ -128,7 +129,8 @@ var App = new Vue({
   	  let removeEndpoint = this.removeEndpoint + this.title;//конкантинуємо повне посилання
       let body = new FormData();
       body.append('author', this.authorForDelete);
-      this.$http.get(removeEndpoint, body).then(function (response) {
+      console.log(this.authorForDelete);
+      this.$http.post(removeEndpoint, body).then(function (response) {
            location.reload(true);//перезавантаження сторінки...
       }, function (error) {/*Помилка */});
     },
@@ -145,6 +147,7 @@ var App = new Vue({
     editPost: function (title, text) {
   	  let body = new FormData();
       body.append('title', title);
+      body.append('author', this.authorForDelete);
       body.append('text', text);
       this.$http.post(this.editEndpoint, body).then(function (response) {
         location.reload(true);
