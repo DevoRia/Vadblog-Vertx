@@ -4,8 +4,6 @@ import com.vadim.vadblog.dao.model.ModelConstants;
 import com.vadim.vadblog.dao.model.Post;
 import io.vertx.core.json.JsonObject;
 
-import java.util.List;
-
 public class JsonMaker {
 
     public static JsonObject newJsonOfPost (Post post) {

@@ -8,5 +8,8 @@ public interface VerticleConstatnts {
     String EDIT_POST = "editPost";
     String REMOVE_POST = "removePost";
 
+    String EDIT_OLD_POST = "old";
+    String EDIT_NEW_POST = "new";
+
 }
 

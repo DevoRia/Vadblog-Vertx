@@ -7,8 +7,15 @@ import io.vertx.ext.web.RoutingContext;
 
 public class UserService implements Service {
 
+    private final String NULL_EXCEPTION_MESSAGE = "User isn't found";
+
     public String getUsername(JsonObject token){
-        return token.getString(USERNAME);
+        try {
+            return token.getString(USERNAME);
+        }catch (NullPointerException e){
+            System.out.println(NULL_EXCEPTION_MESSAGE);
+            return null;
+        }
     }
 
     public Boolean isAdmin (JsonArray roles){
@@ -25,8 +32,14 @@ public class UserService implements Service {
     }
 
     JsonArray getRolesByToken (JsonObject token){
-        JsonObject resource_access = token.getJsonObject(REALM_ACCESS);
-        return resource_access.getJsonArray(ROLES_ARRAY);
+        try {
+            JsonObject resource_access = token.getJsonObject(REALM_ACCESS);
+            return resource_access.getJsonArray(ROLES_ARRAY);
+        }catch (NullPointerException e){
+            System.out.println(NULL_EXCEPTION_MESSAGE);
+            return null;
+        }
+
     }
 
     public Boolean accessToChange (JsonObject token, RoutingContext routingContext) {
@@ -36,4 +49,5 @@ public class UserService implements Service {
     public String nameFromPost (RoutingContext routingContext){
         return PostService.getAttribute(ModelConstants.KEY_AUTHOR, routingContext);
     }
+
 }

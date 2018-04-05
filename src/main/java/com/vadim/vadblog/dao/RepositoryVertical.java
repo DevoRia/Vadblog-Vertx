@@ -5,8 +5,6 @@ import io.vertx.core.AbstractVerticle;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonObject;
 
-import java.util.ArrayList;
-
 public class RepositoryVertical extends AbstractVerticle{
 
     @Override
@@ -28,8 +26,9 @@ public class RepositoryVertical extends AbstractVerticle{
 
         eventBus.consumer(VerticleConstatnts.EDIT_POST, req -> {
             JsonObject body = (JsonObject) req.body();
-            System.out.println(body);
-            repository.edit(body.getJsonObject("old"), body.getJsonObject("new"));
+            repository.edit(
+                    body.getJsonObject(VerticleConstatnts.EDIT_OLD_POST),
+                    body.getJsonObject(VerticleConstatnts.EDIT_NEW_POST));
         });
 
         eventBus.consumer(VerticleConstatnts.REMOVE_POST, req -> {

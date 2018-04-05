@@ -4,7 +4,6 @@ import com.vadim.vadblog.dao.RepositoryVertical;
 import com.vadim.vadblog.router.BlogRouter;
 import com.vadim.vadblog.service.security.AuthManage;
 import io.vertx.core.AbstractVerticle;
-import io.vertx.core.eventbus.EventBus;
 
 public class MainVerticle extends AbstractVerticle {
 

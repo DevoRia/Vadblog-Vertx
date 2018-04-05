@@ -103,7 +103,14 @@ public class BlogRouter {
     }
 
     private void getAllPosts (RoutingContext routingContext) {
-        dataService.getAllPosts(routingContext);
+        dataService.getAllPosts(res -> {
+            if (res.succeeded()){
+                routingContext.response()
+                        .putHeader("content-type", "application/json; charset=utf-8")
+                        .putHeader(BlogRouter.ACCESS_CONTROL_ALLOW_ORIGIN, BlogRouter.HTTP_HEADER_SELECT_ALL)
+                        .end(String.valueOf(res.result().body()));
+            }
+        });
     }
 
     private void savePost (RoutingContext routingContext){
