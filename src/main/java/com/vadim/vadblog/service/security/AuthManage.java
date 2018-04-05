@@ -15,12 +15,12 @@ public class AuthManage {
     public AuthManage(Vertx vertx) {
         JsonObject object = new JsonObject(
                 "{\n" +
-                        "  \"realm\": \"Blog\",\n" +
+                        "  \"realm\": \"blog\",\n" +
                         "  \"auth-server-url\": \"http://localhost:8180/auth\",\n" +
                         "  \"ssl-required\": \"external\",\n" +
                         "  \"resource\": \"vertx\",\n" +
                         "  \"credentials\": {\n" +
-                        "    \"secret\": \"7f3d78a1-62e1-4706-9021-20ff886436e7\"\n" +
+                        "    \"secret\": \"a0b5ca45-6d61-4fa5-858b-cd120b4bbb6f\"\n" +
                         "  },\n" +
                         "  \"confidential-port\": 0,\n" +
                         "  \"policy-enforcer\": {}\n" +
